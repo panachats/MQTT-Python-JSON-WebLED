@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/5.2.2/mqtt.min.js"
+        integrity="sha512-I8gBERqrEkyDqbjHj3aymzBVIPFs85vGSzy26+1P5weHzFp8vfJ8dARJz51n3oQ80DTdYn8MbhUiz5UAW2rMxw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <title>LED Control</title>
+</head>
+
+<body>
+    <h1>LED</h1>
+    <button type="button" id="ledButton" onclick="toggleLED()">Toggle LED</button>
+
+    <script>
+        // เชื่อมต่อกับ MQTT Broker ที่อยู่ที่ 192.168.0.20:9000
+        const client = mqtt.connect("mqtt://192.168.0.20:9000");
+        let isLedOn = false;
+
+        // เมื่อเชื่อมต่อสำเร็จ
+        client.on("connect", () => {
+            // Subscribe ไปยัง topic "led"
+            client.subscribe("led", (err) => {
+                // หากไม่มีข้อผิดพลาด
+                if (!err) {
+                    // ส่งข้อมูล "ON" หรือ "OFF" ไปที่ topic "led"
+                    client.publish("led", isLedOn ? "on" : "off");
+                }
+            });
+        });
+
+        // เมื่อมีการรับข้อมูลจาก MQTT Broker
+        client.on("message", (topic, message) => {
+            // ทำการประมวลผลข้อมูลที่ได้รับ
+            console.log(message.toString());
+        });
+
+        // ฟังก์ชันที่ใช้สลับสถานะ LED
+        function toggleLED() {
+            // สลับค่าตัวแปร isLedOn
+            isLedOn = !isLedOn;
+            // ส่งข้อมูล "ON" หรือ "OFF" ไปที่ topic "led"
+            client.publish("led", isLedOn ? "on" : "off");
+
+            // อัปเดตข้อความที่ปุ่ม
+            var button = document.getElementById('ledButton');
+            button.innerText = 'Toggle LED (' + (isLedOn ? 'ON' : 'OFF') + ')';
+        }
+
+    </script>
+</body>
+
+</html>
